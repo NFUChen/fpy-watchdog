@@ -1,0 +1,6 @@
+docker rm -f watchdog && \
+docker build -t watchdog ./EOL-watchdog && \
+docker run --name watchdog -idt \
+    --restart always \
+    -v /home/sram-prod/test_results:/eol_test_results \
+    watchdog
