@@ -24,14 +24,22 @@ class DataBaseScanner:
 
     def _publish(self, test_result: dict[str, Any]) -> None:
         try:
+            client_id = test_result["data"]["client_id"]
+            print(f"Posting: {test_result}")
             json_response = requests.post(f"http://{self.remote_host}:{self.remote_host_port}/save", json=test_result).json()
             print(json_response)
-            data = json_response["data"]
+            data = json_response.get("data")
             if data is not None and data["ack"]:
-                self._acknowledge(data["client_id"])
+                self._acknowledge(client_id)
+                return
+        
+            error = json_response.get("error")
+            if error is not None and "Duplicate entry" in error:
+                self._acknowledge(client_id)
+                return
         except Exception as error:
             print(error)
-            os._exit(1)
+            exit(1)
 
     def _acknowledge(self, client_id: str) -> None:
         query = {"data.client_id": client_id}
